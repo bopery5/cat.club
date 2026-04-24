@@ -421,11 +421,8 @@ do
         function library:Toggle()
             if not toggling then
                 toggling = true
-
                 library.toggled = not library.toggled
-                local tween = utility.makevisible(holder, library.toggled)
-                tween.Completed:Wait()
-
+                holder.Visible = library.toggled
                 toggling = false
             end
         end
