@@ -4,7 +4,7 @@ until game:IsLoaded()
 
 local library
 do
-    local folder = "zenith.lol"
+    local folder = "cat.club"
 
     local services = setmetatable({}, {
         __index = function(_, service)
@@ -262,10 +262,9 @@ do
 
     local flags = {}
 
-    local CONFIG_FOLDER = "zenith/rivalsv1/configs"
+    local CONFIG_FOLDER = "cat.club/configs"
 
-    if not isfolder("zenith") then makefolder("zenith") end
-    if not isfolder("zenith/rivalsv1") then makefolder("zenith/rivalsv1") end
+    if not isfolder("cat.club") then makefolder("cat.club")
     if not isfolder(CONFIG_FOLDER) then makefolder(CONFIG_FOLDER) end
 
     function library:SaveConfig(name)
