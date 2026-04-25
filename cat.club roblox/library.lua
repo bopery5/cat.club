@@ -4,7 +4,7 @@ until game:IsLoaded()
 
 local library
 do
-    local folder = "cat.club"
+    local folder = "specter"
 
     local services = setmetatable({}, {
         __index = function(_, service)
@@ -258,17 +258,14 @@ do
         end
     end
 
-    local gui = utility.create("ScreenGui", {DisplayOrder = 2147483647})
+    local gui = utility.create("ScreenGui", {})
 
     local flags = {}
 
-    local CONFIG_FOLDER = "cat.club/configs"
-
-    if not isfolder("cat.club") then makefolder("cat.club")
-    if not isfolder(CONFIG_FOLDER) then makefolder(CONFIG_FOLDER) end
-
-    function library:SaveConfig(name)
+    function library:SaveConfig(name, universal)
         local configtbl = {}
+        local placeid = universal and "universal" or game.PlaceId
+
         for flag, _ in next, flags do
             local value = library.flags[flag]
             if typeof(value) == "EnumItem" then
@@ -279,37 +276,66 @@ do
                 configtbl[flag] = value
             end
         end
+
         local config = services.HttpService:JSONEncode(configtbl)
-        local filepath = string.format("%s//%s.json", CONFIG_FOLDER, name)
+        local folderpath = string.format("%s//%s", folder, placeid)
+
+        if not isfolder(folderpath) then
+            makefolder(folderpath)
+        end
+
+        local filepath = string.format("%s//%s.json", folderpath, name)
         writefile(filepath, config)
     end
 
-    function library:DeleteConfig(name)
-        local filepath = string.format("%s//%s.json", CONFIG_FOLDER, name)
-        if isfile(filepath) then
+    function library:DeleteConfig(name, universal)
+        local placeid = universal and "universal" or game.PlaceId
+
+        local folderpath = string.format("%s//%s", folder, placeid)
+
+        if isfolder(folderpath) then
+            local folderpath = string.format("%s//%s", folder, placeid)
+            local filepath = string.format("%s//%s.json", folderpath, name)
+
             delfile(filepath)
         end
     end
 
     function library:LoadConfig(name)
-        local filepath = string.format("%s//%s.json", CONFIG_FOLDER, name)
-        if not isfile(filepath) then return end
+        local placeidfolder = string.format("%s//%s", folder, game.PlaceId)
+        local placeidfile = string.format("%s//%s.json", placeidfolder, name)
+
+        local filepath
+        do
+            if isfolder(placeidfolder) and isfile(placeidfile) then
+                filepath = placeidfile
+            else
+                filepath = string.format("%s//universal//%s.json", folder, name)
+            end
+        end
+
         local file = readfile(filepath)
         local config = services.HttpService:JSONDecode(file)
+
         for flag, v in next, config do
             local func = flags[flag]
-            if func then
-                func(v)
-            end
+            func(v)
         end
     end
 
-    function library:ListConfigs()
+    function library:ListConfigs(universal)
         local configs = {}
-        for _, file in next, listfiles(CONFIG_FOLDER) do
-            if file:find(".json") then
-                local name = file:gsub(CONFIG_FOLDER .. "\\", ""):gsub(".json", "")
-                table.insert(configs, name)
+        local placeidfolder = string.format("%s//%s", folder, game.PlaceId)
+        local universalfolder = folder .. "//universal"
+
+        for _, config in next, (isfolder(placeidfolder) and listfiles(placeidfolder) or {}) do
+            local name = config:gsub(placeidfolder .. "\\", ""):gsub(".json", "")
+            table.insert(configs, name)
+        end
+
+        if universal and isfolder(universalfolder) then
+            for _, config in next, (isfolder(placeidfolder) and listfiles(placeidfolder) or {}) do
+                configs[config:gsub(universalfolder .. "\\", "")] = readfile(config)
             end
         end
         return configs
@@ -3780,4 +3806,5 @@ do
         library:Initialize()
     end
 end
-end
+
+return library
